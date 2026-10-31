@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static core_tags %}
+{% block title %}{{ autre.nom_affiche }} — Messages{% endblock %}
+{% block content %}
+<section class="wrap narrow section">
+  <div class="chat card">
+    <div class="chat-head">
+      <a href="{% url 'messaging:boite' %}">←</a>
+      {% avatar autre 36 %}
+      <div class="grow"><a href="{% url 'profil:public' autre.username %}"><b>{{ autre.nom_affiche }}</b></a>
+        {% if conv.trajet %}<br><a class="muted small" href="{{ conv.trajet.get_absolute_url }}">{{ conv.trajet }}</a>{% endif %}</div>
+    </div>
+    <div class="chat-body" id="chat-body">
+      {% for m in messages_conv %}
+        <div class="bubble {% if m.auteur == user %}me{% endif %}" data-id="{{ m.id }}">{{ m.contenu|linebreaksbr }}<time>{{ m.envoye_le|date:"H:i" }}</time></div>
+      {% empty %}<p class="muted center" id="chat-empty">Dites bonjour 👋</p>{% endfor %}
+    </div>
+    <form class="chat-form" id="chat-form" data-poll="{% url 'messaging:api_messages' conv.pk %}" data-send="{% url 'messaging:api_envoyer' conv.pk %}" data-last="{{ dernier_id }}">
+      {% csrf_token %}
+      <input class="input" name="contenu" placeholder="Votre message…" autocomplete="off" maxlength="1000" required>
+      <button class="btn">Envoyer</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/chat.js' %}"></script>{% endblock %}

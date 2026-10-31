@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load core_tags %}
+{% block title %}{{ membre.nom_affiche }} — IFRI Comotorage{% endblock %}
+{% block content %}
+<section class="wrap section profile">
+  <aside class="card profile-card">
+    {% avatar membre 88 %}
+    <h1>{{ membre.nom_affiche }}</h1>
+    <p class="muted">{{ membre.get_filiere_display }} · {{ membre.get_role_display }}</p>
+    {% if resume.nombre %}
+      <p class="rating"><span class="stars">{{ resume.moyenne|etoiles }}</span> {{ resume.moyenne }}/5 · {{ resume.nombre }} avis</p>
+    {% else %}<p class="muted">Pas encore d'avis</p>{% endif %}
+    <p>{{ membre.bio|linebreaksbr }}</p>
+    <dl class="facts">
+      <dt>Trajets proposés</dt><dd>{{ nb_trajets }}</dd>
+      <dt>Membre depuis</dt><dd>{{ membre.date_joined|date:"F Y" }}</dd>
+      {% if vehicule %}<dt>Véhicule</dt><dd>{{ vehicule }}</dd>{% endif %}
+    </dl>
+    {% if user.is_authenticated and user != membre %}
+      <a class="btn wide" href="{% url 'messaging:demarrer' membre.username %}">Envoyer un message</a>
+    {% elif user == membre %}
+      <a class="btn btn-ghost wide" href="{% url 'profil:modifier' %}">Modifier mon profil</a>
+    {% endif %}
+  </aside>
+  <div>
+    <h2>Prochains trajets</h2>
+    <div class="trip-list">{% for t in trajets %}{% include "partials/trajet_card.html" %}{% empty %}<p class="muted">Aucun trajet à venir.</p>{% endfor %}</div>
+    <h2>Avis reçus</h2>
+    {% for a in avis %}
+      <div class="card review">
+        <div class="review-head">{% avatar a.auteur 30 %}<b>{{ a.auteur.nom_affiche }}</b><span class="stars">{{ a.note|etoiles }}</span><span class="muted">{{ a.cree_le|date:"d/m/Y" }}</span></div>
+        {% if a.commentaire %}<p>{{ a.commentaire }}</p>{% endif %}
+      </div>
+    {% empty %}<p class="muted">Aucun avis pour le moment.</p>{% endfor %}
+  </div>
+</section>
+{% endblock %}

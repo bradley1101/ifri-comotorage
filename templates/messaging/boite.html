@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load core_tags %}
+{% block title %}Messages — IFRI Comotorage{% endblock %}
+{% block content %}
+<section class="wrap narrow section">
+  <h1>Messages</h1>
+  <div class="card list">
+    {% for it in items %}
+      <a class="row link-row" href="{{ it.conv.get_absolute_url }}">
+        {% avatar it.autre 42 %}
+        <div class="grow"><b>{{ it.autre.nom_affiche }}</b>{% if it.conv.trajet %} <small class="muted">· {{ it.conv.trajet.lieu_depart }} → {{ it.conv.trajet.lieu_arrivee }}</small>{% endif %}<br>
+          <span class="muted">{{ it.dernier.contenu|truncatechars:70|default:"Nouvelle conversation" }}</span></div>
+        {% if it.non_lus %}<span class="dot static">{{ it.non_lus }}</span>{% endif %}
+        <small class="muted">{{ it.conv.mis_a_jour|date:"d/m H:i" }}</small>
+      </a>
+    {% empty %}<p class="muted pad">Aucune conversation. Contactez un conducteur depuis la page d'un trajet.</p>{% endfor %}
+  </div>
+</section>
+{% endblock %}

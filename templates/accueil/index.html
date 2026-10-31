@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% block content %}
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="kicker">Communauté IFRI · Abomey-Calavi</p>
+      <h1>Venez à l'IFRI ensemble,<br>partagez la route et les frais.</h1>
+      <p class="lead">Les étudiants et le personnel qui ont une voiture ou une moto proposent leurs trajets. Les autres réservent une place en deux clics.</p>
+      <form class="search card" method="get" action="{% url 'trajets:recherche' %}">
+        {% for f in form %}{% include "partials/field.html" %}{% endfor %}
+        <button class="btn">Rechercher</button>
+      </form>
+    </div>
+    <div class="hero-map card"><div id="map-home" class="map"></div></div>
+    {{ points|json_script:"home-points" }}
+  </div>
+</section>
+
+<section class="wrap stats">
+  <div><strong>{{ stats.membres }}</strong><span>membres</span></div>
+  <div><strong>{{ stats.trajets }}</strong><span>trajets proposés</span></div>
+  <div><strong>{{ stats.places }}</strong><span>places partagées</span></div>
+</section>
+
+<section class="wrap section">
+  <div class="section-head">
+    <h2>Prochains départs</h2>
+    <a href="{% url 'trajets:recherche' %}">Tout voir →</a>
+  </div>
+  <div class="trip-list">
+    {% for t in prochains %}{% include "partials/trajet_card.html" %}{% empty %}
+      <p class="muted">Aucun trajet pour le moment. <a href="{% url 'publication_offre:nouvelle' %}">Proposez le premier !</a></p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="wrap section how">
+  <div class="card"><b>1</b><h3>Publiez</h3><p>Départ, arrivée sur la carte, heure, places et prix par place.</p></div>
+  <div class="card"><b>2</b><h3>Réservez</h3><p>Le passager envoie une demande, le conducteur l'accepte ou la refuse.</p></div>
+  <div class="card"><b>3</b><h3>Échangez</h3><p>Messagerie intégrée pour convenir du point de rendez-vous.</p></div>
+  <div class="card"><b>4</b><h3>Notez</h3><p>Après le trajet, chacun laisse un avis pour bâtir la confiance.</p></div>
+</section>
+{% endblock %}
+{% block scripts %}<script>initHomeMap("map-home", {{ IFRI_LAT|unlocalize }}, {{ IFRI_LNG|unlocalize }});</script>{% endblock %}

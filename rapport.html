@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rapport — IFRI Comotorage</title>
+<style>
+  :root { --brand: #12573f; --accent: #e8742c; --ink: #1b221e; --muted: #5f6964; --line: #e2e0d8; }
+  body { font-family: Georgia, "Times New Roman", serif; color: var(--ink); max-width: 820px; margin: 40px auto; padding: 0 20px; line-height: 1.65; background: #fff; }
+  h1, h2, h3 { font-family: system-ui, "Segoe UI", sans-serif; color: var(--brand); line-height: 1.2; }
+  h1 { font-size: 34px; margin-bottom: 4px; } h2 { margin-top: 42px; border-bottom: 2px solid var(--line); padding-bottom: 6px; }
+  .sub { color: var(--muted); font-family: system-ui, sans-serif; margin-top: 0; }
+  table { border-collapse: collapse; width: 100%; font-family: system-ui, sans-serif; font-size: 14px; margin: 14px 0; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; } th { background: #f3f5f2; }
+  code { background: #f3f3ef; padding: 1px 5px; border-radius: 4px; font-size: 14px; }
+  img { max-width: 100%; border: 1px solid var(--line); border-radius: 8px; margin: 10px 0; }
+  figure { margin: 18px 0; } figcaption { color: var(--muted); font-size: 14px; font-family: system-ui, sans-serif; }
+  .toc { background: #f6f7f4; border-radius: 8px; padding: 14px 24px; font-family: system-ui, sans-serif; }
+  @media print { body { margin: 0; } h2 { page-break-after: avoid; } img { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<h1>IFRI Comotorage</h1>
+<p class="sub">Plateforme de covoiturage de la communauté IFRI — Rapport de projet intégrateur (PIL1, 2024-2025)<br>
+Institut de Formation et de Recherche en Informatique — Université d'Abomey-Calavi</p>
+
+<div class="toc">
+  <b>Sommaire</b>
+  <ol>
+    <li><a href="#contexte">Contexte et objectifs</a></li>
+    <li><a href="#fonctionnalites">Fonctionnalités</a></li>
+    <li><a href="#architecture">Architecture technique</a></li>
+    <li><a href="#donnees">Modèle de données</a></li>
+    <li><a href="#regles">Règles de gestion</a></li>
+    <li><a href="#interface">Interface</a></li>
+    <li><a href="#tests">Tests et validation</a></li>
+    <li><a href="#limites">Limites et perspectives</a></li>
+  </ol>
+</div>
+
+<h2 id="contexte">1. Contexte et objectifs</h2>
+<p>Beaucoup d'étudiants de l'IFRI habitent loin du campus d'Abomey-Calavi (Cotonou, Godomey, Akpakpa…). Le trajet quotidien coûte cher en zémidjan et provoque des retards. Pourtant, des étudiants et des membres du personnel font chaque jour le même trajet avec des places libres dans leur voiture ou sur leur moto.</p>
+<p><b>Objectif :</b> une application web qui met en relation conducteurs et passagers de la communauté IFRI. Elle permet de publier un trajet, de le trouver, de réserver une place, d'échanger avec le conducteur et de bâtir la confiance par des avis.</p>
+
+<h2 id="fonctionnalites">2. Fonctionnalités</h2>
+<table>
+  <tr><th>Module</th><th>Fonctionnalités</th></tr>
+  <tr><td>Comptes</td><td>Inscription (filière, rôle : passager / conducteur / les deux), connexion, déconnexion</td></tr>
+  <tr><td>Profil</td><td>Profil public, note moyenne, avis reçus, véhicule (marque, modèle, couleur, places)</td></tr>
+  <tr><td>Publication</td><td>Départ et arrivée placés sur une carte Leaflet, date et heure, places, prix par place, bagages, description</td></tr>
+  <tr><td>Recherche</td><td>Filtres par départ, arrivée, date et nombre de places ; pagination</td></tr>
+  <tr><td>Réservation</td><td>Demande, acceptation ou refus par le conducteur, annulation par le passager, annulation du trajet par le conducteur</td></tr>
+  <tr><td>Messagerie</td><td>Conversations entre membres, liées à un trajet, mises à jour automatiquement</td></tr>
+  <tr><td>Notifications</td><td>Demande, acceptation, refus, annulation, message, avis ; compteurs dans le menu</td></tr>
+  <tr><td>Avis</td><td>Notation de 1 à 5 étoiles et commentaire, après le trajet, entre le conducteur et ses passagers</td></tr>
+  <tr><td>Tableau de bord</td><td>Statistiques, demandes à traiter, trajets et réservations à venir, avis à laisser</td></tr>
+</table>
+
+<h2 id="architecture">3. Architecture technique</h2>
+<ul>
+  <li><b>Back-end :</b> Python 3, Django 5 (architecture MVT), une application Django par module.</li>
+  <li><b>Base de données :</b> MySQL / MariaDB en production, SQLite pour le développement. Le choix se fait par variable d'environnement.</li>
+  <li><b>Front-end :</b> templates Django, CSS sur mesure (responsive), JavaScript sans framework.</li>
+  <li><b>Cartographie :</b> Leaflet et fonds OpenStreetMap, livrés avec le projet (pas de dépendance à un CDN).</li>
+  <li><b>Messagerie :</b> API JSON interrogée toutes les 3 secondes. Ce choix évite un serveur WebSocket (Channels, Redis), difficile à héberger pour un projet étudiant.</li>
+</ul>
+<table>
+  <tr><th>Application</th><th>Rôle</th></tr>
+  <tr><td><code>users</code></td><td>Modèle utilisateur personnalisé (rôle, filière, téléphone)</td></tr>
+  <tr><td><code>login</code></td><td>Inscription, connexion, déconnexion</td></tr>
+  <tr><td><code>profil</code></td><td>Profil public et modification, véhicule</td></tr>
+  <tr><td><code>trajets</code></td><td>Trajets et réservations, recherche, règles de réservation (<code>services.py</code>)</td></tr>
+  <tr><td><code>publication_offre</code></td><td>Formulaire de publication avec carte, modification, annulation</td></tr>
+  <tr><td><code>avis</code></td><td>Avis et règles de notation</td></tr>
+  <tr><td><code>messaging</code></td><td>Conversations, messages, API JSON</td></tr>
+  <tr><td><code>notifications</code></td><td>Notifications et service <code>notifier()</code> utilisé par les autres applications</td></tr>
+  <tr><td><code>dashboard</code></td><td>Tableau de bord de l'utilisateur</td></tr>
+  <tr><td><code>accueil_covoiturage_app</code></td><td>Page d'accueil, à propos</td></tr>
+  <tr><td><code>core</code></td><td>Éléments partagés : compteurs du menu, filtres de templates, données de démonstration</td></tr>
+</table>
+
+<h2 id="donnees">4. Modèle de données</h2>
+<table>
+  <tr><th>Table</th><th>Champs principaux</th></tr>
+  <tr><td>User</td><td>username, nom, prénom, email (unique), téléphone, rôle, filière, bio</td></tr>
+  <tr><td>Vehicule</td><td>propriétaire (1-1), marque, modèle, couleur, places (1 à 8), immatriculation</td></tr>
+  <tr><td>Trajet</td><td>conducteur, lieu, latitude et longitude du départ et de l'arrivée, date de départ, places, prix, bagages, statut (ouvert / complet / annulé)</td></tr>
+  <tr><td>Reservation</td><td>trajet, passager, places, message, statut (en attente / confirmée / refusée / annulée) ; une seule par passager et par trajet</td></tr>
+  <tr><td>Avis</td><td>auteur, cible, trajet, note (1 à 5, contrainte CHECK), commentaire ; un seul par auteur, cible et trajet</td></tr>
+  <tr><td>Conversation, Message</td><td>participants, trajet associé ; auteur, contenu, date, lu</td></tr>
+  <tr><td>Notification</td><td>destinataire, type, texte, lien, lue</td></tr>
+</table>
+<p>Le script complet de la base (structure et données de démonstration) est fourni dans <code>base_e_donnees.sql</code>.</p>
+
+<h2 id="regles">5. Règles de gestion</h2>
+<ul>
+  <li>Un conducteur ne peut pas réserver son propre trajet.</li>
+  <li>On ne peut réserver qu'un trajet ouvert et à venir, dans la limite des places restantes.</li>
+  <li>Places restantes = places proposées − places des réservations <b>confirmées</b>.</li>
+  <li>Quand il ne reste plus de place, le trajet passe à <i>complet</i>. Il redevient <i>ouvert</i> si un passager confirmé annule.</li>
+  <li>Seul le conducteur accepte ou refuse une demande. Une demande ne se traite qu'une fois.</li>
+  <li>Le conducteur ne peut pas réduire le nombre de places sous le nombre de places déjà confirmées, ni dépasser la capacité de son véhicule.</li>
+  <li>Quand un trajet est annulé, toutes ses réservations sont annulées et les passagers sont notifiés.</li>
+  <li>Les avis ne sont possibles qu'après le trajet, entre le conducteur et ses passagers confirmés, une seule fois.</li>
+</ul>
+<p>Ces règles sont centralisées dans <code>trajets/services.py</code>. Chaque opération s'exécute dans une transaction qui verrouille la ligne du trajet (<code>select_for_update</code>) : deux demandes simultanées ne peuvent pas dépasser le nombre de places.</p>
+
+<h2 id="interface">6. Interface</h2>
+<figure><img src="ifri_comotorage_ui/01-accueil.png" alt="Accueil"><figcaption>Page d'accueil : recherche, carte des départs, prochains trajets.</figcaption></figure>
+<figure><img src="ifri_comotorage_ui/03-detail-trajet-conducteur.png" alt="Détail d'un trajet"><figcaption>Page d'un trajet vue par le conducteur : itinéraire, demandes à accepter ou refuser.</figcaption></figure>
+<figure><img src="ifri_comotorage_ui/04-publier-un-trajet.png" alt="Publication"><figcaption>Publication d'un trajet : les points de départ et d'arrivée sont placés sur la carte.</figcaption></figure>
+<figure><img src="ifri_comotorage_ui/06-tableau-de-bord.png" alt="Tableau de bord"><figcaption>Tableau de bord du conducteur.</figcaption></figure>
+<p><i>Sur ces captures, les fonds de carte OpenStreetMap sont remplacés par un fond neutre. En utilisation normale, la vraie carte s'affiche.</i></p>
+
+<h2 id="tests">7. Tests et validation</h2>
+<p>32 tests automatisés (<code>python manage.py test</code>) passent sur SQLite et sur MySQL. Ils couvrent :</p>
+<ul>
+  <li>les règles de réservation : propre trajet, places, trajet passé ou annulé, double réservation, nouvelle demande après un refus, passages complet / ouvert, droits du conducteur, annulation d'un trajet ;</li>
+  <li>la publication : points sur la carte obligatoires, date future, places limitées par le véhicule, propriété du trajet ;</li>
+  <li>les avis : participants uniquement, après le trajet, une seule fois ;</li>
+  <li>la messagerie : une conversation par paire, état lu / non lu, pas de notifications en rafale, confidentialité ;</li>
+  <li>l'inscription et l'affichage de toutes les pages, pour un visiteur et pour un membre.</li>
+</ul>
+<p>Les tests ont fait apparaître et corriger plusieurs défauts :</p>
+<ul>
+  <li>une annulation lisait un état périmé du trajet, et un trajet complet ne redevenait pas ouvert ;</li>
+  <li>une jointure double faussait la recherche de conversation existante ;</li>
+  <li>sur MySQL sans tables de fuseaux horaires, la recherche par date ne fonctionnait pas ;</li>
+  <li>les heures étaient affichées en UTC dans les titres et les notifications ;</li>
+  <li>les coordonnées de la carte étaient localisées avec une virgule.</li>
+</ul>
+
+<h2 id="limites">8. Limites et perspectives</h2>
+<ul>
+  <li><b>Temps réel :</b> la messagerie interroge le serveur toutes les 3 secondes. Django Channels (WebSocket) apporterait du vrai temps réel.</li>
+  <li><b>Itinéraire :</b> la carte relie départ et arrivée par une ligne droite. Un service de calcul d'itinéraire (OSRM) donnerait le trajet routier et sa durée.</li>
+  <li><b>Vérification des comptes :</b> il faudrait limiter l'inscription aux adresses e-mail de l'université et confirmer l'adresse par e-mail.</li>
+  <li><b>Paiement :</b> le prix est indicatif et réglé en main propre. Un paiement Mobile Money pourrait être intégré.</li>
+  <li><b>Trajets récurrents :</b> beaucoup de trajets se répètent chaque jour de cours ; une option « tous les jours de la semaine » serait utile.</li>
+</ul>
+</body>
+</html>

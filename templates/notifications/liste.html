@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Notifications — IFRI Comotorage{% endblock %}
+{% block content %}
+<section class="wrap narrow section">
+  <div class="section-head"><h1>Notifications</h1>
+    <form method="post" action="{% url 'notifications:tout_lire' %}">{% csrf_token %}<button class="btn btn-sm btn-ghost">Tout marquer comme lu</button></form></div>
+  <div class="card list">
+    {% for n in notifications %}
+      <a class="row link-row {% if not n.lue %}unread{% endif %}" href="{% url 'notifications:ouvrir' n.pk %}">
+        <span class="notif-type {{ n.type }}"></span>
+        <div class="grow">{{ n.texte }}<br><small class="muted">{{ n.cree_le|timesince }}</small></div>
+      </a>
+    {% empty %}<p class="muted pad">Aucune notification.</p>{% endfor %}
+  </div>
+</section>
+{% endblock %}

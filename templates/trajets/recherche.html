@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Trouver un trajet — IFRI Comotorage{% endblock %}
+{% block content %}
+<section class="wrap section">
+  <h1>Trouver un trajet</h1>
+  <form class="search card inline" method="get">
+    {% for f in form %}{% include "partials/field.html" %}{% endfor %}
+    <button class="btn">Filtrer</button>
+  </form>
+  <p class="muted">{{ page.paginator.count }} trajet{{ page.paginator.count|pluralize }} disponible{{ page.paginator.count|pluralize }}</p>
+  <div class="trip-list">
+    {% for t in page %}{% include "partials/trajet_card.html" %}{% empty %}
+      <div class="card empty">Aucun trajet ne correspond. Essayez une autre date, ou <a href="{% url 'publication_offre:nouvelle' %}">proposez ce trajet</a>.</div>
+    {% endfor %}
+  </div>
+  {% if page.has_other_pages %}
+  <nav class="pager">
+    {% if page.has_previous %}<a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}page={{ page.previous_page_number }}">← Précédent</a>{% endif %}
+    <span>Page {{ page.number }} / {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a href="?{% for k, v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v|urlencode }}&{% endif %}{% endfor %}page={{ page.next_page_number }}">Suivant →</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% endblock %}

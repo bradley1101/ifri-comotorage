@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load core_tags %}
+{% block title %}{{ trajet.lieu_depart }} → {{ trajet.lieu_arrivee }} — IFRI Comotorage{% endblock %}
+{% block content %}
+<section class="wrap section detail">
+  <div>
+    <p class="kicker">{{ trajet.date_depart|date:"l d F Y" }}</p>
+    <h1>{{ trajet.lieu_depart }} → {{ trajet.lieu_arrivee }}</h1>
+    <div class="badges">
+      <span class="badge {{ trajet.statut }}">{{ trajet.get_statut_display }}</span>
+      {% if trajet.est_passe and trajet.statut != 'annule' %}<span class="badge">Terminé</span>{% endif %}
+      {% if trajet.bagages %}<span class="badge soft">Bagages acceptés</span>{% endif %}
+    </div>
+    <div class="card map-card">
+      <div id="map-trip" class="map tall"></div>
+    </div>
+    <div class="card timeline">
+      <div class="stop"><i class="pin a"></i><div><b>{{ trajet.date_depart|date:"H:i" }}</b> {{ trajet.lieu_depart }}</div></div>
+      <div class="stop"><i class="pin b"></i><div>{{ trajet.lieu_arrivee }}</div></div>
+      {% if trajet.description %}<p class="desc">{{ trajet.description|linebreaksbr }}</p>{% endif %}
+    </div>
+
+    {% if est_conducteur %}
+    <div class="card">
+      <h2>Demandes de réservation</h2>
+      {% for r in reservations %}
+        <div class="row">
+          {% avatar r.passager 32 %}
+          <div class="grow"><a href="{% url 'profil:public' r.passager.username %}"><b>{{ r.passager.nom_affiche }}</b></a> · {{ r.places }} place{{ r.places|pluralize }}
+            {% if r.message %}<br><small class="muted">« {{ r.message }} »</small>{% endif %}</div>
+          <span class="badge {{ r.statut }}">{{ r.get_statut_display }}</span>
+          {% if r.statut == 'en_attente' %}
+            <form method="post" action="{% url 'trajets:accepter' r.pk %}">{% csrf_token %}<button class="btn btn-sm">Accepter</button></form>
+            <form method="post" action="{% url 'trajets:refuser' r.pk %}">{% csrf_token %}<button class="btn btn-sm btn-ghost">Refuser</button></form>
+          {% endif %}
+          <a class="btn btn-sm btn-ghost" href="{% url 'messaging:demarrer' r.passager.username %}?trajet={{ trajet.pk }}">✉</a>
+        </div>
+      {% empty %}<p class="muted">Aucune demande pour l'instant.</p>{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <aside>
+    <div class="card booking">
+      <div class="price big">{{ trajet.prix|fcfa }}<small> / place</small></div>
+      <p><b>{{ trajet.places_restantes }}</b> place{{ trajet.places_restantes|pluralize }} disponible{{ trajet.places_restantes|pluralize }} sur {{ trajet.places_total }}</p>
+
+      {% if est_conducteur %}
+        {% if not trajet.est_passe and trajet.statut != 'annule' %}
+          <a class="btn btn-ghost wide" href="{% url 'publication_offre:modifier' trajet.pk %}">Modifier</a>
+          <form method="post" action="{% url 'publication_offre:annuler' trajet.pk %}" onsubmit="return confirm('Annuler ce trajet ? Les passagers seront prévenus.')">{% csrf_token %}<button class="btn btn-danger wide">Annuler le trajet</button></form>
+        {% endif %}
+      {% elif not user.is_authenticated %}
+        <a class="btn wide" href="{% url 'login:connexion' %}?next={{ request.path }}">Connectez-vous pour réserver</a>
+      {% elif ma_reservation and ma_reservation.active %}
+        <div class="alert {% if ma_reservation.statut == 'confirmee' %}success{% else %}info{% endif %}">
+          Votre réservation : <b>{{ ma_reservation.get_statut_display }}</b> ({{ ma_reservation.places }} place{{ ma_reservation.places|pluralize }})</div>
+        {% if not trajet.est_passe %}
+        <form method="post" action="{% url 'trajets:annuler' ma_reservation.pk %}">{% csrf_token %}<button class="btn btn-ghost wide">Annuler ma réservation</button></form>
+        {% endif %}
+      {% elif trajet.reservable %}
+        <form method="post" action="{% url 'trajets:reserver' trajet.pk %}" class="form">{% csrf_token %}
+          {% for f in form %}{% include "partials/field.html" %}{% endfor %}
+          <button class="btn wide">Demander à réserver</button>
+        </form>
+      {% else %}
+        <p class="muted">Ce trajet n'est plus réservable.</p>
+      {% endif %}
+    </div>
+
+    <div class="card driver-card">
+      <div class="row">{% avatar trajet.conducteur 48 %}
+        <div class="grow"><a href="{% url 'profil:public' trajet.conducteur.username %}"><b>{{ trajet.conducteur.nom_affiche }}</b></a><br>
+          <small class="muted">{{ trajet.conducteur.get_filiere_display }}</small></div></div>
+      {% if trajet.conducteur.vehicule %}<p class="muted">🚗 {{ trajet.conducteur.vehicule }}</p>{% endif %}
+      {% if user.is_authenticated and not est_conducteur %}
+        <a class="btn btn-ghost wide" href="{% url 'messaging:demarrer' trajet.conducteur.username %}?trajet={{ trajet.pk }}">Contacter le conducteur</a>
+      {% endif %}
+    </div>
+
+    {% if passagers %}
+    <div class="card"><h3>Passagers confirmés</h3>
+      {% for p in passagers %}<div class="row">{% avatar p 28 %}<span>{{ p.nom_affiche }}</span></div>{% endfor %}
+    </div>{% endif %}
+
+    {% if a_noter %}
+    <div class="card"><h3>Laisser un avis</h3>
+      {% for p in a_noter %}<a class="btn btn-ghost wide" href="{% url 'avis:noter' trajet.pk p.username %}">Noter {{ p.nom_affiche }}</a>{% endfor %}
+    </div>{% endif %}
+  </aside>
+</section>
+{% endblock %}
+{% block scripts %}<script>initTripMap("map-trip", [{{ trajet.lat_depart|stringformat:"f" }}, {{ trajet.lng_depart|stringformat:"f" }}], [{{ trajet.lat_arrivee|stringformat:"f" }}, {{ trajet.lng_arrivee|stringformat:"f" }}]);</script>{% endblock %}

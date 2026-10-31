@@ -1,0 +1,16 @@
+{% load core_tags %}
+<a class="card trip" href="{{ t.get_absolute_url }}">
+  <div class="trip-time">
+    <strong>{{ t.date_depart|date:"H:i" }}</strong>
+    <span>{{ t.date_depart|date:"D d M" }}</span>
+  </div>
+  <div class="trip-route">
+    <div class="stop"><i class="pin a"></i>{{ t.lieu_depart }}</div>
+    <div class="stop"><i class="pin b"></i>{{ t.lieu_arrivee }}</div>
+  </div>
+  <div class="trip-side">
+    <div class="price">{{ t.prix|fcfa }}</div>
+    <div class="seats">{{ t.places_restantes }} place{{ t.places_restantes|pluralize }}</div>
+    <div class="driver">{% avatar t.conducteur 26 %}<span>{{ t.conducteur.first_name|default:t.conducteur.username }}</span></div>
+  </div>
+</a>

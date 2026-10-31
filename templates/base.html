@@ -1,0 +1,58 @@
+{% load static core_tags %}<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}IFRI Comotorage{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="{% url 'accueil:index' %}"><span class="logo">IC</span> IFRI <b>Comotorage</b></a>
+    <nav class="links">
+      <a href="{% url 'trajets:recherche' %}">Trouver un trajet</a>
+      <a href="{% url 'publication_offre:nouvelle' %}" class="btn btn-sm">Proposer un trajet</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'messaging:boite' %}" class="icon" title="Messages">✉{% if nb_messages %}<span class="dot">{{ nb_messages }}</span>{% endif %}</a>
+        <a href="{% url 'notifications:liste' %}" class="icon" title="Notifications">🔔{% if nb_notifications %}<span class="dot">{{ nb_notifications }}</span>{% endif %}</a>
+        <details class="menu">
+          <summary>{% avatar user 34 %}</summary>
+          <div class="menu-list">
+            <a href="{% url 'dashboard:index' %}">Tableau de bord</a>
+            <a href="{% url 'profil:moi' %}">Mon profil</a>
+            <a href="{% url 'profil:vehicule' %}">Mon véhicule</a>
+            <form method="post" action="{% url 'login:deconnexion' %}">{% csrf_token %}<button>Déconnexion</button></form>
+          </div>
+        </details>
+      {% else %}
+        <a href="{% url 'login:connexion' %}">Connexion</a>
+        <a href="{% url 'login:inscription' %}" class="btn btn-sm btn-ghost">Inscription</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+{% if messages %}
+<div class="wrap flash">
+  {% for m in messages %}<div class="alert {{ m.tags }}">{{ m }}</div>{% endfor %}
+</div>
+{% endif %}
+
+<main>{% block content %}{% endblock %}</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <span>IFRI Comotorage — covoiturage de la communauté IFRI, Université d'Abomey-Calavi</span>
+    <a href="{% url 'accueil:a_propos' %}">À propos</a>
+  </div>
+</footer>
+<script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+<script src="{% static 'js/map.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

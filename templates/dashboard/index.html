@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load core_tags %}
+{% block title %}Tableau de bord — IFRI Comotorage{% endblock %}
+{% block content %}
+<section class="wrap section">
+  <div class="section-head">
+    <h1>Bonjour {{ user.first_name|default:user.username }}</h1>
+    <a class="btn" href="{% url 'publication_offre:nouvelle' %}">+ Proposer un trajet</a>
+  </div>
+  <div class="kpis">
+    <div class="card kpi"><span>Trajets proposés</span><strong>{{ stats.trajets_proposes }}</strong></div>
+    <div class="card kpi"><span>Passagers transportés</span><strong>{{ stats.passagers_transportes }}</strong></div>
+    <div class="card kpi"><span>Trajets en passager</span><strong>{{ stats.trajets_passager }}</strong></div>
+    <div class="card kpi"><span>Note moyenne</span><strong>{% if stats.note.moyenne %}{{ stats.note.moyenne }}<small>/5</small>{% else %}—{% endif %}</strong></div>
+  </div>
+
+  {% if demandes %}
+  <div class="card">
+    <h2>Demandes à traiter <span class="dot static">{{ demandes|length }}</span></h2>
+    {% for r in demandes %}
+      <div class="row">{% avatar r.passager 34 %}
+        <div class="grow"><b>{{ r.passager.nom_affiche }}</b> · {{ r.places }} place{{ r.places|pluralize }}<br><small class="muted">{{ r.trajet }}</small></div>
+        <form method="post" action="{% url 'trajets:accepter' r.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-sm">Accepter</button></form>
+        <form method="post" action="{% url 'trajets:refuser' r.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-sm btn-ghost">Refuser</button></form>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="cols">
+    <div>
+      <h2>Mes trajets à venir (conducteur)</h2>
+      <div class="trip-list">{% for t in mes_trajets %}{% include "partials/trajet_card.html" %}{% empty %}<p class="muted">Aucun trajet proposé.</p>{% endfor %}</div>
+    </div>
+    <div>
+      <h2>Mes réservations</h2>
+      {% for r in mes_reservations %}
+        <a class="card row link-row" href="{{ r.trajet.get_absolute_url }}">
+          <div class="grow"><b>{{ r.trajet.lieu_depart }} → {{ r.trajet.lieu_arrivee }}</b><br><small class="muted">{{ r.trajet.date_depart|date:"D d M · H:i" }} · {{ r.trajet.conducteur.nom_affiche }}</small></div>
+          <span class="badge {{ r.statut }}">{{ r.get_statut_display }}</span>
+        </a>
+      {% empty %}<p class="muted">Aucune réservation. <a href="{% url 'trajets:recherche' %}">Trouver un trajet</a></p>{% endfor %}
+      {% if a_noter %}
+        <h2>Avis à laisser</h2>
+        {% for t, p in a_noter %}<a class="card row link-row" href="{% url 'avis:noter' t.pk p.username %}">{% avatar p 30 %}<div class="grow">Noter <b>{{ p.nom_affiche }}</b><br><small class="muted">{{ t }}</small></div><span>★</span></a>{% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

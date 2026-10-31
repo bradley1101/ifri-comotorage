@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% block title %}{{ titre }} — IFRI Comotorage{% endblock %}
+{% block content %}
+<section class="wrap section">
+  <h1>{{ titre }}</h1>
+  <form method="post" class="publish">
+    {% csrf_token %}
+    <div class="card form">
+      {% include "partials/field.html" with f=form.lieu_depart %}
+      {% include "partials/field.html" with f=form.lieu_arrivee %}
+      <div class="grid2">
+        {% include "partials/field.html" with f=form.date_depart %}
+        {% include "partials/field.html" with f=form.places_total %}
+        {% include "partials/field.html" with f=form.prix %}
+        {% include "partials/field.html" with f=form.bagages %}
+      </div>
+      {% include "partials/field.html" with f=form.description %}
+      {% for h in form.hidden_fields %}{{ h }}{% endfor %}
+      {% for h in form.hidden_fields %}{% for e in h.errors %}<div class="alert error">{{ e }}</div>{% endfor %}{% endfor %}
+      <button class="btn wide">{% if trajet %}Enregistrer{% else %}Publier le trajet{% endif %}</button>
+    </div>
+    <div class="card map-card">
+      <div class="map-help">
+        <button type="button" class="chip active" data-mode="depart"><i class="pin a"></i> Placer le départ</button>
+        <button type="button" class="chip" data-mode="arrivee"><i class="pin b"></i> Placer l'arrivée</button>
+        <button type="button" class="chip" id="btn-ifri">📍 IFRI comme arrivée</button>
+      </div>
+      <div id="map-pick" class="map tall"></div>
+      <small class="muted">Cliquez sur la carte pour placer le point sélectionné. Les marqueurs se déplacent à la souris.</small>
+    </div>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}<script>initPickerMap("map-pick", {{ IFRI_LAT|unlocalize }}, {{ IFRI_LNG|unlocalize }});</script>{% endblock %}

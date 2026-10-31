@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load core_tags %}
+{% block content %}
+<section class="wrap narrow section">
+  <form method="post" class="card form">
+    <h1>Noter {{ cible.nom_affiche }}</h1>
+    <p class="muted">Trajet {{ trajet }}</p>
+    {% csrf_token %}
+    <div class="field"><label>Note</label><div class="star-input">{% for r in form.note %}{{ r }}{% endfor %}</div>
+      {% for e in form.note.errors %}<small class="error">{{ e }}</small>{% endfor %}</div>
+    {% include "partials/field.html" with f=form.commentaire %}
+    <button class="btn">Publier l'avis</button>
+  </form>
+</section>
+{% endblock %}
